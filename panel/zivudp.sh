@@ -675,59 +675,61 @@ screen_about() {
 #  MAIN MENU
 # ════════════════════════════════════════════════════════════════
 main_menu() {
-  ensure_config
   while true; do
     draw_header
     draw_dashboard
-
-    echo -e "  ${DIM}  ┌── 👥  USER MANAGEMENT ──────────────────────────────┐${NC}"
-    echo -e "  ${DIM}  │${NC}  ${G}[1]${NC}  List All Users + Connection Info              ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${G}[2]${NC}  Add User                                      ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${G}[3]${NC}  Bulk Add  ${DIM}(comma-separated)${NC}                    ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${Y}[4]${NC}  Trial User  ${DIM}(auto-expires 1–60 min)${NC}           ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${R}[5]${NC}  Remove Single User                             ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${R}[6]${NC}  Remove Multiple Users                          ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${R}[7]${NC}  Clear ALL Users                                ${DIM}│${NC}"
-    echo -e "  ${DIM}  ├── ⚙  SERVICE CONTROL ───────────────────────────────┤${NC}"
-    echo -e "  ${DIM}  │${NC}  ${G}[8]${NC}  Start ZIVPN                                    ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${R}[9]${NC}  Stop  ZIVPN                                    ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${Y}[10]${NC} Restart ZIVPN                                  ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${M}[u]${NC}  Auto-Update from GitHub  ${DIM}⟳${NC}                    ${DIM}│${NC}"
-    echo -e "  ${DIM}  ├── 🛠  TOOLS ────────────────────────────────────────┤${NC}"
-    echo -e "  ${DIM}  │${NC}  ${C}[m]${NC}  Live Connection Monitor                        ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${C}[p]${NC}  Change Listen Port                             ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${Y}[c]${NC}  Config Check & Repair                          ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${W}[i]${NC}  About / Info                                   ${DIM}│${NC}"
-    echo -e "  ${DIM}  │${NC}  ${DR}[q]${NC}  Exit                                           ${DIM}│${NC}"
-    echo -e "  ${DIM}  └────────────────────────────────────────────────────┘${NC}"
+    echo -e "  ${B}┌──────────────────────────────────────────────────────┐${NC}"
+    echo -e "  ${B}│${NC}  ${W}USER MANAGEMENT${NC}                                              ${B}│${NC}"
+    echo -e "  ${B}├──────────────────────────────────────────────────────┤${NC}"
+    echo -e "  ${B}│${NC}  ${G}[1]${NC}  List All Users + Connection Info                         ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[2]${NC}  Add User                                                ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[3]${NC}  Bulk Add (comma-separated)                               ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[4]${NC}  Trial User (auto-expires 1-60 min)                       ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[5]${NC}  Remove Single User                                       ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[6]${NC}  Remove Multiple Users                                    ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[7]${NC}  Clear ALL Users                                          ${B}│${NC}"
+    echo -e "  ${B}├──────────────────────────────────────────────────────┤${NC}"
+    echo -e "  ${B}│${NC}  ${W}SERVICE CONTROL${NC}                                             ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[8]${NC}  Start ZIVPN                                             ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[9]${NC}  Stop ZIVPN                                              ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[10]${NC} Restart ZIVPN                                           ${B}│${NC}"
+    echo -e "  ${B}├──────────────────────────────────────────────────────┤${NC}"
+    echo -e "  ${B}│${NC}  ${W}TOOLS${NC}                                                       ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[U]${NC}  Auto-Update from GitHub                                 ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[M]${NC}  Live Connection Monitor                                 ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[P]${NC}  Change Listen Port                                      ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[C]${NC}  Config Check & Repair                                   ${B}│${NC}"
+    echo -e "  ${B}│${NC}  ${G}[A]${NC}  About / Info                                            ${B}│${NC}"
+    echo -e "  ${B}├──────────────────────────────────────────────────────┤${NC}"
+    echo -e "  ${B}│${NC}  ${G}[0]${NC}  Exit                                                    ${B}│${NC}"
+    echo -e "  ${B}└──────────────────────────────────────────────────────┘${NC}"
     echo ""
-    echo -ne "  ${C}▶${NC}  Select option: "
-    read -r choice
+    echo -ne "  ${DW}Select option${NC}  ${DIM}▶${NC} "
+    read -r opt
 
-    case "$choice" in
-      1)    screen_list        ;;
-      2)    screen_add_user    ;;
-      3)    screen_bulk_add    ;;
-      4)    screen_trial_user  ;;
-      5)    screen_remove_user ;;
-      6)    screen_bulk_remove ;;
-      7)    screen_clear_all   ;;
-      8)    screen_start       ;;
-      9)    screen_stop        ;;
-      10)   screen_restart     ;;
-      u|U)  screen_autoupdate  ;;
-      m|M)  screen_monitor     ;;
-      p|P)  screen_change_port ;;
-      c|C)  screen_config_check;;
-      i|I)  screen_about       ;;
-      q|Q|0)
-        clear
-        echo -e "\n  ${C}  ★  NOOBS ZIVPN UDP PANEL — Goodbye!  ★${NC}\n"
-        exit 0 ;;
-      *)
-        echo -e "\n  ${R}  ✘  Invalid option.${NC}"; sleep 1 ;;
+    case "$opt" in
+      1) screen_list ;;
+      2) screen_add_user ;;
+      3) screen_bulk_add ;;
+      4) screen_trial_user ;;
+      5) screen_remove_user ;;
+      6) screen_bulk_remove ;;
+      7) screen_clear_all ;;
+      8) screen_start ;;
+      9) screen_stop ;;
+      10) screen_restart ;;
+      [Uu]) screen_autoupdate ;;
+      [Mm]) screen_monitor ;;
+      [Pp]) screen_change_port ;;
+      [Cc]) screen_config_repair ;;
+      [Aa]) screen_about ;;
+      0) echo -e "\n  ${G}Bye!${NC}\n"; exit 0 ;;
+      *) result_err "Invalid option"; press_any ;;
     esac
   done
 }
 
+# ════════════════════════════════════════════════════════════════
+#  START
+# ════════════════════════════════════════════════════════════════
 main_menu
