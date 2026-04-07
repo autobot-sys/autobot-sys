@@ -236,7 +236,7 @@ screen_add_user() {
   local IP; IP=$(server_ip)
   echo ""
   echo -e "  ${G}  ╔═══════════════════════════════════════════════╗${NC}"
-  echo -e "  ${G}  ║     🎉  USER ADDED SUCCESSFULLY  🎉           ║${NC}"
+  echo -e "  ${G}  ║     🎉  USER ADDED SUCCESSFULLY  🎉          ║${NC}"
   echo -e "  ${G}  ╠═══════════════════════════════════════════════╣${NC}"
   printf  "  ${G}  ║${NC}  ${DW}Password :${NC}  ${W}%-31s${G}  ║${NC}\n" "$new_pass"
   printf  "  ${G}  ║${NC}  ${DW}Server IP:${NC}  ${W}%-31s${G}  ║${NC}\n" "$IP"
