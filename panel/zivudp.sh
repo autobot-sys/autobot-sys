@@ -139,7 +139,7 @@ draw_header() {
   echo "  ║   ██║ ╚████║╚██████╔╝╚██████╔╝██████╔╝███████║           ║"
   echo "  ║   ╚═╝  ╚═══╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚══════╝           ║"
   echo -e "  ║${NC}                                                          ${C}║${NC}"
-  echo -e "  ${C}║${NC}  ${Y}${BOLD}  ━━━━━━ Z I V P N  U D P  P A N E L ━━━━━━   ${NC}  ${C} ║${NC}"
+  echo -e "  ${C}║${NC}  ${Y}${BOLD}  ━━━━━━ Z I V P N  U D P  P A N E L ━━━━━━   ${NC}  ${C}             ║${NC}"
   echo -e "  ${C}║${NC}  ${DIM}        github.com/autobot-sys  ·  v${PANEL_VERSION}${NC}  ${C}             ║${NC}"
   echo -e "${C}  ╚══════════════════════════════════════════════════════════╝${NC}"
 }
