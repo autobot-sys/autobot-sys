@@ -124,7 +124,7 @@ result_warn() { echo -e "\n  ${Y}  ⚠  $*${NC}"; }
 result_err()  { echo -e "\n  ${R}  ✘  $*${NC}"; }
 
 # ════════════════════════════════════════════════════════════════
-#  HEADER & DASHBOARD
+#  HEADER & DASHBOARD (ALIGNMENT FIXED)
 # ════════════════════════════════════════════════════════════════
 
 draw_header() {
@@ -159,9 +159,10 @@ draw_dashboard() {
 
   echo ""
   echo -e "${DIM}  ┌──────────────────────────────┬──────────────────────────────┐${NC}"
-  printf  "  ${DIM}│${NC}  ${DW}Service${NC}  ${SVC_COL}%-20s${NC}  ${DIM}│${NC}  ${DW}IP${NC}      ${W}%-20s${NC}  ${DIM}│${NC}\n" "$SVC_TXT" "$IP"
-  printf  "  ${DIM}│${NC}  ${DW}Port   ${NC}  ${Y}%-20s${NC}  ${DIM}│${NC}  ${DW}Relay${NC}   ${W}%-20s${NC}  ${DIM}│${NC}\n" "${PORT}/udp" "6000-19999/udp"
-  printf  "  ${DIM}│${NC}  ${DW}Obfs   ${NC}  ${C}%-20s${NC}  ${DIM}│${NC}  ${DW}Users${NC}   ${Y}%-20s${NC}  ${DIM}│${NC}\n" "zivpn" "${CNT} active"
+  # Left labels fixed width 7, right labels fixed width 5
+  printf "  ${DIM}│${NC}  ${DW}%-7s${NC}  ${SVC_COL}%-20s${NC}  ${DIM}│${NC}  ${DW}%-5s${NC}  ${W}%-20s${NC}  ${DIM}│${NC}\n" "Service" "$SVC_TXT" "IP" "$IP"
+  printf "  ${DIM}│${NC}  ${DW}%-7s${NC}  ${Y}%-20s${NC}  ${DIM}│${NC}  ${DW}%-5s${NC}  ${W}%-20s${NC}  ${DIM}│${NC}\n" "Port" "${PORT}/udp" "Relay" "6000-19999/udp"
+  printf "  ${DIM}│${NC}  ${DW}%-7s${NC}  ${C}%-20s${NC}  ${DIM}│${NC}  ${DW}%-5s${NC}  ${Y}%-20s${NC}  ${DIM}│${NC}\n" "Obfs" "zivpn" "Users" "${CNT} active"
   echo -e "${DIM}  └──────────────────────────────┴──────────────────────────────┘${NC}"
   echo ""
 }
@@ -579,101 +580,97 @@ screen_change_port() {
   section "$C" "🔌   CHANGE LISTEN PORT"
 
   local curr; curr=$(get_port)
-  echo -e "  ${DIM}  Current port:${NC}  ${W}$curr/udp${NC}\n"
-  echo -ne "  ${DW}New port${NC}  ${DIM}(1024–65535, 0 to cancel)${NC}  ${DIM}▶${NC} "
-  read -r np
+  echo -e "  ${DW}Current port:${NC} ${Y}$curr${NC}\n"
+  echo -ne "  ${DW}New port (1-65535)${NC}  ${DIM}▶${NC} "
+  read -r newport
+  [[ ! "$newport" =~ ^[0-9]+$ ]] || [ "$newport" -lt 1 ] || [ "$newport" -gt 65535 ] && { result_err "Invalid port."; press_any; return; }
 
-  { [ "$np" = "0" ] || [ -z "$np" ]; } && return
-  if ! [[ "$np" =~ ^[0-9]+$ ]] || [ "$np" -lt 1024 ] || [ "$np" -gt 65535 ]; then
-    result_err "Invalid port."; press_any; return
-  fi
-
-  jq --arg p ":$np" '.listen = $p' "$CONFIG_FILE" > /tmp/zv_tmp.json && mv /tmp/zv_tmp.json "$CONFIG_FILE"
-  iptables -I INPUT -p udp --dport "$np" -j ACCEPT 2>/dev/null || true
+  jq --arg p ":$newport" '.listen = $p' "$CONFIG_FILE" > /tmp/zv_port.json && mv /tmp/zv_port.json "$CONFIG_FILE"
   reload_svc
-  result_ok "Port changed to ${W}$np${G}. Service reloaded."
+  result_ok "Listen port changed to $newport. Service restarted."
   press_any
 }
 
 # ════════════════════════════════════════════════════════════════
-#  [C]  CONFIG CHECK / REPAIR
+#  [C]  CONFIG CHECK & REPAIR
 # ════════════════════════════════════════════════════════════════
-screen_config_check() {
+screen_config_repair() {
   draw_header; draw_dashboard
   section "$C" "🔧   CONFIG CHECK & REPAIR"
 
-  echo -e "  ${W}  Current config.json:${NC}\n"
-  cat "$CONFIG_FILE" 2>/dev/null | sed 's/^/    /' | \
-    sed "s/\"listen\"/${G}&${NC}/g" | \
-    sed "s/\"cert\"\|\"key\"\|\"obfs\"/${Y}&${NC}/g" | \
-    sed "s/\"auth\"/${C}&${NC}/g"
+  echo -e "  ${DW}Checking configuration...${NC}\n"
 
-  echo ""
-  echo -e "  ${DIM}  Checking required fields...${NC}"
-  local ok=1
-  jq -e '.listen'     "$CONFIG_FILE" &>/dev/null && echo -e "  ${G}  ✔ listen${NC}"      || { echo -e "  ${R}  ✘ listen${NC}";     ok=0; }
-  jq -e '.cert'       "$CONFIG_FILE" &>/dev/null && echo -e "  ${G}  ✔ cert${NC}"        || { echo -e "  ${R}  ✘ cert${NC}";       ok=0; }
-  jq -e '.key'        "$CONFIG_FILE" &>/dev/null && echo -e "  ${G}  ✔ key${NC}"         || { echo -e "  ${R}  ✘ key${NC}";        ok=0; }
-  jq -e '.obfs'       "$CONFIG_FILE" &>/dev/null && echo -e "  ${G}  ✔ obfs${NC}"        || { echo -e "  ${R}  ✘ obfs${NC}";       ok=0; }
-  jq -e '.auth'       "$CONFIG_FILE" &>/dev/null && echo -e "  ${G}  ✔ auth${NC}"        || { echo -e "  ${R}  ✘ auth${NC}";       ok=0; }
-  jq -e '.auth.config' "$CONFIG_FILE" &>/dev/null && echo -e "  ${G}  ✔ auth.config${NC}" || { echo -e "  ${R}  ✘ auth.config${NC}"; ok=0; }
-  [ -f "/etc/zivpn/zivpn.crt" ] && echo -e "  ${G}  ✔ cert file${NC}" || echo -e "  ${R}  ✘ cert file missing${NC}"
-  [ -f "/etc/zivpn/zivpn.key" ] && echo -e "  ${G}  ✔ key file${NC}"  || echo -e "  ${R}  ✘ key file missing${NC}"
+  ensure_config
 
-  if [ "$ok" -eq 0 ]; then
-    echo ""
-    if confirm_yn "Config has errors. Auto-repair now?"; then
-      ensure_config
-      # Force correct auth structure
-      local current_passwords
-      current_passwords=$(jq -c '[.auth.config // [] | .[]]' "$CONFIG_FILE" 2>/dev/null || echo "[]")
-      cat > "$CONFIG_FILE" << CONF
-{
-  "listen": ":5667",
-  "cert": "/etc/zivpn/zivpn.crt",
-  "key": "/etc/zivpn/zivpn.key",
-  "obfs": "zivpn",
-  "auth": {
-    "mode": "passwords",
-    "config": $current_passwords
-  }
-}
-CONF
-      reload_svc
-      result_ok "Config repaired. Service reloaded."
-    fi
+  # Verify required fields
+  local broken=0
+  if ! jq -e '.listen' "$CONFIG_FILE" &>/dev/null; then
+    echo -e "  ${R}✘ Missing 'listen' field${NC}"; broken=1
   else
-    echo ""
-    result_ok "Config looks healthy."
+    echo -e "  ${G}✔ Listen field OK${NC}"
+  fi
+
+  if ! jq -e '.auth.mode' "$CONFIG_FILE" &>/dev/null; then
+    echo -e "  ${R}✘ Missing auth.mode${NC}"; broken=1
+  else
+    echo -e "  ${G}✔ Auth mode OK${NC}"
+  fi
+
+  if [ ! -f "/etc/zivpn/zivpn.crt" ] || [ ! -f "/etc/zivpn/zivpn.key" ]; then
+    echo -e "  ${R}✘ SSL certificate missing${NC}"; broken=1
+  else
+    echo -e "  ${G}✔ SSL certificate present${NC}"
+  fi
+
+  if [ $broken -eq 1 ]; then
+    echo -e "\n  ${Y}Attempting repairs...${NC}"
+    ensure_config
+    if [ ! -f "/etc/zivpn/zivpn.crt" ]; then
+      openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \
+        -subj "/C=GH/ST=Accra/L=Accra/O=Ardvak/CN=zivpn" \
+        -keyout "/etc/zivpn/zivpn.key" \
+        -out "/etc/zivpn/zivpn.crt" 2>/dev/null
+      echo -e "  ${G}✔ Regenerated SSL certificate${NC}"
+    fi
+    reload_svc
+    result_ok "Configuration repaired and service restarted."
+  else
+    result_ok "All checks passed. Configuration is healthy."
   fi
   press_any
 }
 
 # ════════════════════════════════════════════════════════════════
-#  [I]  ABOUT
+#  [A]  ABOUT / INFO
 # ════════════════════════════════════════════════════════════════
 screen_about() {
-  draw_header
+  draw_header; draw_dashboard
+  section "$M" "ℹ   ABOUT / INFO"
+
+  echo -e "  ${DW}NOOBS ZIVPN UDP Panel${NC}"
+  echo -e "  ${DIM}Version     :${NC} ${Y}$PANEL_VERSION${NC}"
+  echo -e "  ${DIM}Author      :${NC} ${C}@Ardvak / autobot-sys${NC}"
+  echo -e "  ${DIM}Repository  :${NC} ${W}https://github.com/autobot-sys/autobot-sys${NC}"
+  echo -e "  ${DIM}Description :${NC} User management for ZIVPN UDP server${NC}"
+  echo -e "  ${DIM}License     :${NC} MIT${NC}"
   echo ""
-  section "$C" "ℹ   ABOUT  NOOBS ZIVPN UDP PANEL"
-  echo -e "  ${DIM}  ┌─────────────────────────┬──────────────────────────────┐${NC}"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Panel Version"    "$PANEL_VERSION"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Repository"       "github.com/autobot-sys"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Protocol"         "ZIVPN UDP"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Obfs Key"         "zivpn"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Auth Mode"        "auth.passwords"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Binary"           "/usr/local/bin/zivpn"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Config"           "/etc/zivpn/config.json"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Panel Command"    "zivudp"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Original Creator" "Zahid Islam"
-  printf  "  ${DIM}  │${NC}  %-23s  ${DIM}│${NC}  ${W}%-28s${DIM}│${NC}\n" "Panel by"         "PowerMX / autobot-sys"
-  echo -e "  ${DIM}  └─────────────────────────┴──────────────────────────────┘${NC}"
+  echo -e "  ${DW}Features:${NC}"
+  echo -e "    • Add / remove users (passwords)"
+  echo -e "    • Trial users with auto-expiry"
+  echo -e "    • Bulk operations"
+  echo -e "    • Service control (start/stop/restart)"
+  echo -e "    • Live connection monitor"
+  echo -e "    • Change listen port"
+  echo -e "    • Config repair"
+  echo -e "    • Auto-update from GitHub"
+  echo ""
   press_any
 }
 
 # ════════════════════════════════════════════════════════════════
 #  MAIN MENU
 # ════════════════════════════════════════════════════════════════
+
 main_menu() {
   while true; do
     draw_header
