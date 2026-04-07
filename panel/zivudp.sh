@@ -240,7 +240,7 @@ screen_add_user() {
   echo -e "  ${G}  ╠═══════════════════════════════════════════════╣${NC}"
   printf  "  ${G}  ║${NC}  ${DW}Password :${NC}  ${W}%-31s${G}  ║${NC}\n" "$new_pass"
   printf  "  ${G}  ║${NC}  ${DW}Server IP:${NC}  ${W}%-31s${G}  ║${NC}\n" "$IP"
-  printf  "  ${G}  ║${NC}  ${DW}Port     :${NC}  ${W}%-31s${G}   ║${NC}\n" "Any in 6000–19999"
+  printf  "  ${G}  ║${NC}  ${DW}Port      :${NC}  ${W}%-31s${G}  ║${NC}\n" "Any in 6000–19999"
   printf  "  ${G}  ║${NC}  ${DW}Obfs     :${NC}  ${W}%-31s${G}  ║${NC}\n" "zivpn"
   echo -e "  ${G}  ╚═══════════════════════════════════════════════╝${NC}"
   press_any
