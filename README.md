@@ -164,4 +164,4 @@ MIT License — see [LICENSE](LICENSE)
 ## 👤 Credits
 
 - **Original ZIVPN UDP** — [Zahid Islam](https://github.com/zahidbd2)
-- **Installer & Panel** — @ARDVAK / autobot-sys
+- **Installer & Panel** — [ARDVAK](https://t.me/ardvak) / [autobot-sys](https://t.me/noobsvpn)
