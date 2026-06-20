@@ -25,6 +25,42 @@ TOTAL=7
 # ── Root check ───────────────────────────────────────────────────
 [ "$EUID" -ne 0 ] && { echo -e "${R}Run as root.${NC}"; exit 1; }
 
+# ── Password gate ──────────────────────────────────────────────────
+# Only a SHA-256 hash of the password is stored below. The plaintext
+# password is never written to this file, never echoed, and never
+# logged. Installation aborts immediately if the hash doesn't match.
+PASS_HASH="25809d28dc0f580a263b8e39548491e5bc8358af41e3be4df8b095b423530c3d"
+
+hash_input() {
+  if command -v sha256sum &>/dev/null; then
+    printf '%s' "$1" | sha256sum | awk '{print $1}'
+  elif command -v openssl &>/dev/null; then
+    printf '%s' "$1" | openssl dgst -sha256 | awk '{print $NF}'
+  else
+    echo -e "${R}No SHA-256 utility found (need sha256sum or openssl). Exiting.${NC}"
+    exit 1
+  fi
+}
+
+MAX_ATTEMPTS=3
+attempt=1
+authorized=0
+while [ "$attempt" -le "$MAX_ATTEMPTS" ]; do
+  read -s -p "Enter installation password: " ENTERED_PASS
+  echo
+  ENTERED_HASH=$(hash_input "$ENTERED_PASS")
+  unset ENTERED_PASS
+  if [ "$ENTERED_HASH" = "$PASS_HASH" ]; then
+    authorized=1
+    unset ENTERED_HASH
+    break
+  fi
+  echo -e "${R}Incorrect password. ($attempt/$MAX_ATTEMPTS)${NC}"
+  attempt=$((attempt + 1))
+done
+
+[ "$authorized" -eq 1 ] || { echo -e "${R}Too many failed attempts. Aborting installation.${NC}"; exit 1; }
+
 # ── Fix hostname DNS warning ─────────────────────────────────────
 HN=$(hostname)
 grep -q "$HN" /etc/hosts 2>/dev/null || echo "127.0.1.1 $HN" >> /etc/hosts
